@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Resultados de Béisbol en Vivo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 10px; margin: 0; }
+    .game-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 40%;
+      font-size: 0.9em;
+    }
+    .team img {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+    }
+    .score {
+      font-weight: bold;
+      font-size: 1em;
+    }
+    .status {
+      font-size: 0.8em;
+      color: #555;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>⚾ Resultados de Béisbol</h3>
+  <div id="scores-container">Cargando resultados...</div>
+
+  <script>
+    async function fetchBaseballScores() {
+      const container = document.getElementById("scores-container");
+      container.innerHTML = "Cargando resultados...";
+      try {
+        const res = await fetch("https://www.thesportsdb.com/api/v1/json/3/livescore.php?s=Baseball");
+        const data = await res.json();
+        const events = data.events || [];
+
+        if (events.length === 0) {
+          container.innerHTML = "<p>No hay partidos en vivo.</p>";
+          return;
+        }
+
+        container.innerHTML = "";
+        events.forEach(event => {
+          const game = document.createElement("div");
+          game.className = "game-card";
+
+          game.innerHTML = \`
+            <div class="team">
+              <img src="\${event.strHomeTeamBadge}" alt="\${event.strHomeTeam}" />
+              <span>\${event.strHomeTeam}</span>
+            </div>
+            <div class="score">\${event.intHomeScore} - \${event.intAwayScore}</div>
+            <div class="team" style="flex-direction: row-reverse;">
+              <img src="\${event.strAwayTeamBadge}" alt="\${event.strAwayTeam}" />
+              <span>\${event.strAwayTeam}</span>
+            </div>
+          \`;
+
+          const status = document.createElement("div");
+          status.className = "status";
+          status.innerText = event.strProgress || event.strStatus || "Pendiente";
+
+          container.appendChild(status);
+          container.appendChild(game);
+        });
+
+      } catch (err) {
+        console.error("Error al cargar resultados:", err);
+        container.innerHTML = "<p>Error al cargar los resultados.</p>";
+      }
+    }
+
+    fetchBaseballScores();
+    setInterval(fetchBaseballScores, 120000);
+  </script>
+
+</body>
+</html>
